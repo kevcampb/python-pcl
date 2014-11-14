@@ -701,6 +701,48 @@ cdef class OctreePointCloudSearch(OctreePointCloud):
         return np_k_indices, np_k_sqr_distances
 
 
+def load_XYZRGBA(const char *path):
+    cdef cpp.PointCloud[cpt.PointXYZRGBA] *cloud = \
+            new cpp.PointCloud[cpt.PointXYZRGBA]()
+    cpt.loadPCDFile_XYZRGBA(string(path), deref(cloud))
+    cdef cnp.npy_intp n = cloud.size()
+    cdef cnp.ndarray[dtype=object, ndim=2] result
+    cdef cpt.PointXYZRGBA *p
+    result = np.empty((n, 7), 'object')
+    for i in range(n):
+        p = cpt.getptr_XYZRGBA(cloud, i)
+        result[i, 0] = p.x
+        result[i, 1] = p.y
+        result[i, 2] = p.z
+        result[i, 3] = p.b
+        result[i, 4] = p.g
+        result[i, 5] = p.r
+        result[i, 6] = p.a
+    res = (cloud.size(), cloud.width, cloud.height, result)
+    del cloud
+    return res
+
+def save_XYZRGBA(const char *path, cnp.ndarray[dtype=object, ndim=2] arr):
+    assert arr.shape[1] == 7
+    cdef cpp.PointCloud[cpt.PointXYZRGBA] *cloud = \
+            new cpp.PointCloud[cpt.PointXYZRGBA]()
+    cdef cnp.npy_intp npts = arr.shape[0]
+    cloud.resize(npts)
+    cloud.width = npts
+    cloud.height = 1
+    cdef cpt.PointXYZRGBA *p
+    for i in range(npts):
+        p = cpt.getptr_XYZRGBA(cloud, i)
+        p.x = arr[i, 0]
+        p.y = arr[i, 1]
+        p.z = arr[i, 2]
+        p.b = arr[i, 3]
+        p.g = arr[i, 4]
+        p.r = arr[i, 5]
+        p.a = arr[i, 6]
+    cpt.savePCDFile_XYZRGBA(string(path), deref(cloud))
+    del cloud
+
 def load_XYZITf(const char *path):
     cdef cpp.PointCloud[cpt.PointXYZITf] *cloud = \
             new cpp.PointCloud[cpt.PointXYZITf]()
