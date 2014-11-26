@@ -379,6 +379,12 @@ cdef class PointCloud:
         octree.set_input_cloud(self)
         return octree
 
+    def to_octree(self, double resolution):
+        octree = OctreePointCloudSearch(resolution)
+        octree.set_input_cloud(self)
+        octree.add_points_from_input_cloud()
+        return octree
+
     def extract(self, pyindices, bool negative=False):
         """
         Given a list of indices of points in the pointcloud, return a 
