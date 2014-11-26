@@ -854,3 +854,39 @@ def save_XYZFf(const char *path, cnp.ndarray[dtype=cnp.float32_t, ndim=2] arr):
         p.frequency = arr[i, 3]
     cpt.savePCDFile_XYZFf(string(path), deref(cloud))
     del cloud
+
+def load_XYZFd(const char *path):
+    cdef cpp.PointCloud[cpt.PointXYZFd] *cloud = \
+            new cpp.PointCloud[cpt.PointXYZFd]()
+    cpt.loadPCDFile_XYZFd(string(path), deref(cloud))
+    cdef cnp.npy_intp n = cloud.size()
+    cdef cnp.ndarray[dtype=cnp.float64_t, ndim=2] result
+    cdef cpt.PointXYZFd *p
+    result = np.empty((n, 4), 'float64')
+    for i in range(n):
+        p = cpt.getptr_XYZFd(cloud, i)
+        result[i, 0] = p.x
+        result[i, 1] = p.y
+        result[i, 2] = p.z
+        result[i, 3] = p.frequency
+    res = (cloud.size(), cloud.width, cloud.height, result)
+    del cloud
+    return res
+
+def save_XYZFd(const char *path, cnp.ndarray[dtype=cnp.float64_t, ndim=2] arr):
+    assert arr.shape[1] == 4
+    cdef cpp.PointCloud[cpt.PointXYZFd] *cloud = \
+            new cpp.PointCloud[cpt.PointXYZFd]()
+    cdef cnp.npy_intp npts = arr.shape[0]
+    cloud.resize(npts)
+    cloud.width = npts
+    cloud.height = 1
+    cdef cpt.PointXYZFd *p
+    for i in range(npts):
+        p = cpt.getptr_XYZFd(cloud, i)
+        p.x         = arr[i, 0]
+        p.y         = arr[i, 1]
+        p.z         = arr[i, 2]
+        p.frequency = arr[i, 3]
+    cpt.savePCDFile_XYZFd(string(path), deref(cloud))
+    del cloud

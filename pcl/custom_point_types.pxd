@@ -27,11 +27,17 @@ cdef extern from "custom_point_types.h":
         unsigned char intensity
         double timestamp
     cdef struct PointXYZFf:
-        PointXYZIF()
+        PointXYZFf()
         float x
         float y
         float z
         float frequency
+    cdef struct PointXYZFd:
+        PointXYZFd()
+        double x
+        double y
+        double z
+        double frequency
 
 cdef extern from "indexing.hpp":
     PointXYZRGBA *getptr_XYZRGBA "getptr<pcl::PointXYZRGBA>"(
@@ -42,6 +48,8 @@ cdef extern from "indexing.hpp":
             cpp.PointCloud[PointXYZITd] *, size_t)
     PointXYZFf *getptr_XYZFf "getptr<PointXYZFf>"(
             cpp.PointCloud[PointXYZFf] *, size_t)
+    PointXYZFd *getptr_XYZFd "getptr<PointXYZFd>"(
+            cpp.PointCloud[PointXYZFd] *, size_t)
 
 cdef extern from "pcl/io/pcd_io.h":
     int loadPCDFile_XYZRGBA "pcl::io::loadPCDFile<pcl::PointXYZRGBA>"(
@@ -68,3 +76,9 @@ cdef extern from "pcl/io/pcd_io.h":
     int savePCDFile_XYZFf "pcl::io::savePCDFileBinaryCompressed<PointXYZFf>"(
             cpp.string file_name,
             cpp.PointCloud[PointXYZFf] &cloud) nogil except +
+    int loadPCDFile_XYZFd "pcl::io::loadPCDFile<PointXYZFd>"(
+            cpp.string file_name,
+            cpp.PointCloud[PointXYZFd] &cloud) nogil except +
+    int savePCDFile_XYZFd "pcl::io::savePCDFileBinaryCompressed<PointXYZFd>"(
+            cpp.string file_name,
+            cpp.PointCloud[PointXYZFd] &cloud) nogil except +

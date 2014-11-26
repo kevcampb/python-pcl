@@ -27,6 +27,14 @@ struct PointXYZFf {
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW   // make sure our new allocators are aligned
 } EIGEN_ALIGN16;                    // enforce SSE padding for correct memory alignment
 
+struct PointXYZFd {
+  double x;
+  double y;
+  double z;
+  double frequency;
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW   // make sure our new allocators are aligned
+} EIGEN_ALIGN16;                    // enforce SSE padding for correct memory alignment
+
 POINT_CLOUD_REGISTER_POINT_STRUCT ( PointXYZITf,
                                     ( float, x, x )
                                     ( float, y, y )
@@ -48,4 +56,11 @@ POINT_CLOUD_REGISTER_POINT_STRUCT ( PointXYZFf,
                                     ( float, y, y )
                                     ( float, z, z )
                                     ( float, frequency, frequency )
+                                  )
+
+POINT_CLOUD_REGISTER_POINT_STRUCT ( PointXYZFd,
+                                    ( double, x, x )
+                                    ( double, y, y )
+                                    ( double, z, z )
+                                    ( double, frequency, frequency )
                                   )
