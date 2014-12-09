@@ -896,3 +896,43 @@ def save_XYZFd(const char *path, cnp.ndarray[dtype=cnp.float64_t, ndim=2] arr):
         p.frequency = arr[i, 3]
     cpt.savePCDFile_XYZFd(string(path), deref(cloud))
     del cloud
+
+
+cdef extern from "pcl/segmentation/region_growing.h" namespace "pcl":
+    cdef cppclass RegionGrowing[T, N]:
+        RegionGrowing()
+        void setMinClusterSize(int)
+        void setMaxClusterSize(int)
+        void setSearchMethod(cpp.shared_ptr[cpp.KdTree[T]])
+        void setNumberOfNeighbours(unsigned int)
+        void setInputCloud(cpp.shared_ptr[cpp.PointCloud[T]])
+        void setInputNormals(cpp.shared_ptr[cpp.PointCloud[N]])
+        void setSmoothnessThreshold(float)
+        void setCurvatureThreshold(float)
+        void extract(vector[cpp.PointIndices])
+
+def doRegionGrowing(pts, int nn_k, int sz_min, int sz_max,
+        float thres_smooth, float thres_curvature):
+    cdef cpp.shared_ptr[cpp.PointNormalCloud_t] normals
+    cdef cpp.shared_ptr[cpp.KdTree[cpp.PointXYZ]] tree
+    cdef RegionGrowing[cpp.PointXYZ, cpp.Normal] rg
+    cdef vector[cpp.PointIndices] clusters
+    sp_assign(normals, new cpp.PointNormalCloud_t())
+    sp_assign(tree, new cpp.KdTree[cpp.PointXYZ]())
+    pc = PointCloud(pts)
+    mpcl_compute_normals(deref(pc.thisptr()), nn_k, 0, deref(normals.get()))
+    rg.setMinClusterSize(sz_min)
+    rg.setMaxClusterSize(sz_max)
+    rg.setSearchMethod(tree)
+    rg.setNumberOfNeighbours(nn_k)
+    rg.setInputCloud(pc.thisptr_shared)
+    rg.setInputNormals(normals)
+    rg.setSmoothnessThreshold(thres_smooth)
+    rg.setCurvatureThreshold(thres_curvature)
+    rg.extract(clusters)
+    res = []
+    for i in range(clusters.size()):
+        res.append([])
+        for j in range(clusters[i].indices.size()):
+            res[-1].append(clusters[i].indices[j])
+    return res
