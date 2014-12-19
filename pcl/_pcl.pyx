@@ -897,6 +897,53 @@ def save_XYZFd(const char *path, cnp.ndarray[dtype=cnp.float64_t, ndim=2] arr):
     cpt.savePCDFile_XYZFd(string(path), deref(cloud))
     del cloud
 
+def load_XYZCOVf(const char *path):
+    cdef cpp.PointCloud[cpt.PointXYZCOVf] *cloud = \
+            new cpp.PointCloud[cpt.PointXYZCOVf]()
+    cpt.loadPCDFile_XYZCOVf(string(path), deref(cloud))
+    cdef cnp.npy_intp n = cloud.size()
+    cdef cnp.ndarray[dtype=cnp.float32_t, ndim=2] result
+    cdef cpt.PointXYZCOVf *p
+    result = np.empty((n, 9), 'float32')
+    for i in range(n):
+        p = cpt.getptr_XYZCOVf(cloud, i)
+        result[i, 0] = p.x
+        result[i, 1] = p.y
+        result[i, 2] = p.z
+        result[i, 3] = p.cov_xx
+        result[i, 4] = p.cov_yy
+        result[i, 5] = p.cov_zz
+        result[i, 6] = p.cov_xy
+        result[i, 7] = p.cov_yz
+        result[i, 8] = p.cov_zx
+    res = (cloud.size(), cloud.width, cloud.height, result)
+    del cloud
+    return res
+
+def save_XYZCOVf(const char *path, cnp.ndarray[dtype=cnp.float32_t, ndim=2] arr):
+    assert arr.shape[1] == 9
+    cdef cpp.PointCloud[cpt.PointXYZCOVf] *cloud = \
+            new cpp.PointCloud[cpt.PointXYZCOVf]()
+    cdef cnp.npy_intp npts = arr.shape[0]
+    cloud.resize(npts)
+    cloud.width = npts
+    cloud.height = 1
+    cdef cpt.PointXYZCOVf *p
+    for i in range(npts):
+        p = cpt.getptr_XYZCOVf(cloud, i)
+        p.x      = arr[i, 0]
+        p.y      = arr[i, 1]
+        p.z      = arr[i, 2]
+        p.cov_xx = arr[i, 3]
+        p.cov_yy = arr[i, 4]
+        p.cov_zz = arr[i, 5]
+        p.cov_xy = arr[i, 6]
+        p.cov_yz = arr[i, 7]
+        p.cov_zx = arr[i, 8]
+    cpt.savePCDFile_XYZCOVf(string(path), deref(cloud))
+    del cloud
+
+
 
 cdef extern from "pcl/segmentation/region_growing.h" namespace "pcl":
     cdef cppclass RegionGrowing[T, N]:
