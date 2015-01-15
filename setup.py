@@ -58,6 +58,8 @@ for flag in pkgconfig('--libs-only-L'):
 for flag in pkgconfig('--libs-only-other'):
     ext_args['extra_link_args'].append(flag)
 
+ext_args['extra_compile_args'].append("-std=c++11")
+ext_args['extra_link_args'].append("-std=c++11")
 
 setup(name='python-pcl',
       description='pcl wrapper',

@@ -16,6 +16,8 @@ from libcpp.vector cimport vector
 
 from shared_ptr cimport sp_assign
 
+cimport custom_point_types as cpt
+
 cdef extern from "minipcl.h":
     void mpcl_compute_normals(cpp.PointCloud_t, int ksearch,
                               double searchRadius,
@@ -377,6 +379,12 @@ cdef class PointCloud:
         octree.set_input_cloud(self)
         return octree
 
+    def to_octree(self, double resolution):
+        octree = OctreePointCloudSearch(resolution)
+        octree.set_input_cloud(self)
+        octree.add_points_from_input_cloud()
+        return octree
+
     def extract(self, pyindices, bool negative=False):
         """
         Given a list of indices of points in the pointcloud, return a 
@@ -698,3 +706,280 @@ cdef class OctreePointCloudSearch(OctreePointCloud):
             np_k_indices[i] = k_indices[i]
         return np_k_indices, np_k_sqr_distances
 
+
+def load_XYZRGBA(const char *path):
+    cdef cpp.PointCloud[cpt.PointXYZRGBA] *cloud = \
+            new cpp.PointCloud[cpt.PointXYZRGBA]()
+    cpt.loadPCDFile_XYZRGBA(string(path), deref(cloud))
+    cdef cnp.npy_intp n = cloud.size()
+    cdef cnp.ndarray[dtype=object, ndim=2] result
+    cdef cpt.PointXYZRGBA *p
+    result = np.empty((n, 7), 'object')
+    for i in range(n):
+        p = cpt.getptr_XYZRGBA(cloud, i)
+        result[i, 0] = p.x
+        result[i, 1] = p.y
+        result[i, 2] = p.z
+        result[i, 3] = p.b
+        result[i, 4] = p.g
+        result[i, 5] = p.r
+        result[i, 6] = p.a
+    res = (cloud.size(), cloud.width, cloud.height, result)
+    del cloud
+    return res
+
+def save_XYZRGBA(const char *path, cnp.ndarray[dtype=object, ndim=2] arr):
+    assert arr.shape[1] == 7
+    cdef cpp.PointCloud[cpt.PointXYZRGBA] *cloud = \
+            new cpp.PointCloud[cpt.PointXYZRGBA]()
+    cdef cnp.npy_intp npts = arr.shape[0]
+    cloud.resize(npts)
+    cloud.width = npts
+    cloud.height = 1
+    cdef cpt.PointXYZRGBA *p
+    for i in range(npts):
+        p = cpt.getptr_XYZRGBA(cloud, i)
+        p.x = arr[i, 0]
+        p.y = arr[i, 1]
+        p.z = arr[i, 2]
+        p.b = arr[i, 3]
+        p.g = arr[i, 4]
+        p.r = arr[i, 5]
+        p.a = arr[i, 6]
+    cpt.savePCDFile_XYZRGBA(string(path), deref(cloud))
+    del cloud
+
+def load_XYZITf(const char *path):
+    cdef cpp.PointCloud[cpt.PointXYZITf] *cloud = \
+            new cpp.PointCloud[cpt.PointXYZITf]()
+    cpt.loadPCDFile_XYZITf(string(path), deref(cloud))
+    cdef cnp.npy_intp n = cloud.size()
+    cdef cnp.ndarray[dtype=object, ndim=2] result
+    cdef cpt.PointXYZITf *p
+    result = np.empty((n, 5), 'object')
+    for i in range(n):
+        p = cpt.getptr_XYZITf(cloud, i)
+        result[i, 0] = p.x
+        result[i, 1] = p.y
+        result[i, 2] = p.z
+        result[i, 3] = p.intensity
+        result[i, 4] = p.timestamp
+    res = (cloud.size(), cloud.width, cloud.height, result)
+    del cloud
+    return res
+
+def save_XYZITf(const char *path, cnp.ndarray[dtype=object, ndim=2] arr):
+    assert arr.shape[1] == 5
+    cdef cpp.PointCloud[cpt.PointXYZITf] *cloud = \
+            new cpp.PointCloud[cpt.PointXYZITf]()
+    cdef cnp.npy_intp npts = arr.shape[0]
+    cloud.resize(npts)
+    cloud.width = npts
+    cloud.height = 1
+    cdef cpt.PointXYZITf *p
+    for i in range(npts):
+        p = cpt.getptr_XYZITf(cloud, i)
+        p.x         = arr[i, 0]
+        p.y         = arr[i, 1]
+        p.z         = arr[i, 2]
+        p.intensity = arr[i, 3]
+        p.timestamp = arr[i, 4]
+    cpt.savePCDFile_XYZITf(string(path), deref(cloud))
+    del cloud
+
+def load_XYZITd(const char *path):
+    cdef cpp.PointCloud[cpt.PointXYZITd] *cloud = \
+            new cpp.PointCloud[cpt.PointXYZITd]()
+    cpt.loadPCDFile_XYZITd(string(path), deref(cloud))
+    cdef cnp.npy_intp n = cloud.size()
+    cdef cnp.ndarray[dtype=object, ndim=2] result
+    cdef cpt.PointXYZITd *p
+    result = np.empty((n, 5), 'object')
+    for i in range(n):
+        p = cpt.getptr_XYZITd(cloud, i)
+        result[i, 0] = p.x
+        result[i, 1] = p.y
+        result[i, 2] = p.z
+        result[i, 3] = p.intensity
+        result[i, 4] = p.timestamp
+    res = (cloud.size(), cloud.width, cloud.height, result)
+    del cloud
+    return res
+
+def save_XYZITd(const char *path, cnp.ndarray[dtype=object, ndim=2] arr):
+    assert arr.shape[1] == 5
+    cdef cpp.PointCloud[cpt.PointXYZITd] *cloud = \
+            new cpp.PointCloud[cpt.PointXYZITd]()
+    cdef cnp.npy_intp npts = arr.shape[0]
+    cloud.resize(npts)
+    cloud.width = npts
+    cloud.height = 1
+    cdef cpt.PointXYZITd *p
+    for i in range(npts):
+        p = cpt.getptr_XYZITd(cloud, i)
+        p.x         = arr[i, 0]
+        p.y         = arr[i, 1]
+        p.z         = arr[i, 2]
+        p.intensity = arr[i, 3]
+        p.timestamp = arr[i, 4]
+    cpt.savePCDFile_XYZITd(string(path), deref(cloud))
+    del cloud
+
+def load_XYZFf(const char *path):
+    cdef cpp.PointCloud[cpt.PointXYZFf] *cloud = \
+            new cpp.PointCloud[cpt.PointXYZFf]()
+    cpt.loadPCDFile_XYZFf(string(path), deref(cloud))
+    cdef cnp.npy_intp n = cloud.size()
+    cdef cnp.ndarray[dtype=cnp.float32_t, ndim=2] result
+    cdef cpt.PointXYZFf *p
+    result = np.empty((n, 4), 'float32')
+    for i in range(n):
+        p = cpt.getptr_XYZFf(cloud, i)
+        result[i, 0] = p.x
+        result[i, 1] = p.y
+        result[i, 2] = p.z
+        result[i, 3] = p.frequency
+    res = (cloud.size(), cloud.width, cloud.height, result)
+    del cloud
+    return res
+
+def save_XYZFf(const char *path, cnp.ndarray[dtype=cnp.float32_t, ndim=2] arr):
+    assert arr.shape[1] == 4
+    cdef cpp.PointCloud[cpt.PointXYZFf] *cloud = \
+            new cpp.PointCloud[cpt.PointXYZFf]()
+    cdef cnp.npy_intp npts = arr.shape[0]
+    cloud.resize(npts)
+    cloud.width = npts
+    cloud.height = 1
+    cdef cpt.PointXYZFf *p
+    for i in range(npts):
+        p = cpt.getptr_XYZFf(cloud, i)
+        p.x         = arr[i, 0]
+        p.y         = arr[i, 1]
+        p.z         = arr[i, 2]
+        p.frequency = arr[i, 3]
+    cpt.savePCDFile_XYZFf(string(path), deref(cloud))
+    del cloud
+
+def load_XYZFd(const char *path):
+    cdef cpp.PointCloud[cpt.PointXYZFd] *cloud = \
+            new cpp.PointCloud[cpt.PointXYZFd]()
+    cpt.loadPCDFile_XYZFd(string(path), deref(cloud))
+    cdef cnp.npy_intp n = cloud.size()
+    cdef cnp.ndarray[dtype=cnp.float64_t, ndim=2] result
+    cdef cpt.PointXYZFd *p
+    result = np.empty((n, 4), 'float64')
+    for i in range(n):
+        p = cpt.getptr_XYZFd(cloud, i)
+        result[i, 0] = p.x
+        result[i, 1] = p.y
+        result[i, 2] = p.z
+        result[i, 3] = p.frequency
+    res = (cloud.size(), cloud.width, cloud.height, result)
+    del cloud
+    return res
+
+def save_XYZFd(const char *path, cnp.ndarray[dtype=cnp.float64_t, ndim=2] arr):
+    assert arr.shape[1] == 4
+    cdef cpp.PointCloud[cpt.PointXYZFd] *cloud = \
+            new cpp.PointCloud[cpt.PointXYZFd]()
+    cdef cnp.npy_intp npts = arr.shape[0]
+    cloud.resize(npts)
+    cloud.width = npts
+    cloud.height = 1
+    cdef cpt.PointXYZFd *p
+    for i in range(npts):
+        p = cpt.getptr_XYZFd(cloud, i)
+        p.x         = arr[i, 0]
+        p.y         = arr[i, 1]
+        p.z         = arr[i, 2]
+        p.frequency = arr[i, 3]
+    cpt.savePCDFile_XYZFd(string(path), deref(cloud))
+    del cloud
+
+def load_XYZCOVf(const char *path):
+    cdef cpp.PointCloud[cpt.PointXYZCOVf] *cloud = \
+            new cpp.PointCloud[cpt.PointXYZCOVf]()
+    cpt.loadPCDFile_XYZCOVf(string(path), deref(cloud))
+    cdef cnp.npy_intp n = cloud.size()
+    cdef cnp.ndarray[dtype=cnp.float32_t, ndim=2] result
+    cdef cpt.PointXYZCOVf *p
+    result = np.empty((n, 9), 'float32')
+    for i in range(n):
+        p = cpt.getptr_XYZCOVf(cloud, i)
+        result[i, 0] = p.x
+        result[i, 1] = p.y
+        result[i, 2] = p.z
+        result[i, 3] = p.cov_xx
+        result[i, 4] = p.cov_yy
+        result[i, 5] = p.cov_zz
+        result[i, 6] = p.cov_xy
+        result[i, 7] = p.cov_yz
+        result[i, 8] = p.cov_zx
+    res = (cloud.size(), cloud.width, cloud.height, result)
+    del cloud
+    return res
+
+def save_XYZCOVf(const char *path, cnp.ndarray[dtype=cnp.float32_t, ndim=2] arr):
+    assert arr.shape[1] == 9
+    cdef cpp.PointCloud[cpt.PointXYZCOVf] *cloud = \
+            new cpp.PointCloud[cpt.PointXYZCOVf]()
+    cdef cnp.npy_intp npts = arr.shape[0]
+    cloud.resize(npts)
+    cloud.width = npts
+    cloud.height = 1
+    cdef cpt.PointXYZCOVf *p
+    for i in range(npts):
+        p = cpt.getptr_XYZCOVf(cloud, i)
+        p.x      = arr[i, 0]
+        p.y      = arr[i, 1]
+        p.z      = arr[i, 2]
+        p.cov_xx = arr[i, 3]
+        p.cov_yy = arr[i, 4]
+        p.cov_zz = arr[i, 5]
+        p.cov_xy = arr[i, 6]
+        p.cov_yz = arr[i, 7]
+        p.cov_zx = arr[i, 8]
+    cpt.savePCDFile_XYZCOVf(string(path), deref(cloud))
+    del cloud
+
+
+
+cdef extern from "pcl/segmentation/region_growing.h" namespace "pcl":
+    cdef cppclass RegionGrowing[T, N]:
+        RegionGrowing()
+        void setMinClusterSize(int)
+        void setMaxClusterSize(int)
+        void setSearchMethod(cpp.shared_ptr[cpp.KdTree[T]])
+        void setNumberOfNeighbours(unsigned int)
+        void setInputCloud(cpp.shared_ptr[cpp.PointCloud[T]])
+        void setInputNormals(cpp.shared_ptr[cpp.PointCloud[N]])
+        void setSmoothnessThreshold(float)
+        void setCurvatureThreshold(float)
+        void extract(vector[cpp.PointIndices])
+
+def doRegionGrowing(pts, int nn_k, int sz_min, int sz_max,
+        float thres_smooth, float thres_curvature):
+    cdef cpp.shared_ptr[cpp.PointNormalCloud_t] normals
+    cdef cpp.shared_ptr[cpp.KdTree[cpp.PointXYZ]] tree
+    cdef RegionGrowing[cpp.PointXYZ, cpp.Normal] rg
+    cdef vector[cpp.PointIndices] clusters
+    sp_assign(normals, new cpp.PointNormalCloud_t())
+    sp_assign(tree, new cpp.KdTree[cpp.PointXYZ]())
+    pc = PointCloud(pts)
+    mpcl_compute_normals(deref(pc.thisptr()), nn_k, 0, deref(normals.get()))
+    rg.setMinClusterSize(sz_min)
+    rg.setMaxClusterSize(sz_max)
+    rg.setSearchMethod(tree)
+    rg.setNumberOfNeighbours(nn_k)
+    rg.setInputCloud(pc.thisptr_shared)
+    rg.setInputNormals(normals)
+    rg.setSmoothnessThreshold(thres_smooth)
+    rg.setCurvatureThreshold(thres_curvature)
+    rg.extract(clusters)
+    res = []
+    for i in range(clusters.size()):
+        res.append([])
+        for j in range(clusters[i].indices.size()):
+            res[-1].append(clusters[i].indices[j])
+    return res
